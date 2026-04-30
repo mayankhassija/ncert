@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta Tags -->
+  <title>Download NCERT Books PDF (Classes 1-12) - Free Textbooks</title>
+  <meta name="description"
+    content="Get direct links to download NCERT textbooks for Classes 1 to 12. Free PDF and ZIP downloads for all subjects (Math, Science, Hindi, English) from the latest syllabus." />
+  <meta name="keywords"
+    content="NCERT books download, NCERT PDF, NCERT textbooks, Class 6 NCERT, Class 10 NCERT, Class 12 NCERT, free textbooks India, CBSE books" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="NCERT Book Downloader" />
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Download NCERT Books PDF (Classes 1-12) - Free ZIP/PDF" />
+  <meta property="og:description"
+    content="Browse and download all latest NCERT textbooks for Classes 1–12 in one place. Free, fast, and direct ZIP/PDF downloads." />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Download NCERT Books PDF (Classes 1-12)" />
+  <meta name="twitter:description" content="Get free NCERT textbooks for Classes 1–12 instantly. Direct ZIP/PDF downloads." />
+
+  <!-- Structured Data for Search Engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "NCERT Book Downloader",
+    "description": "Free NCERT textbook downloads for Classes 1 to 12",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <link rel="icon" type="image/png" href="ncert.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <!-- Sticky Navbar -->
+  <nav class="topnav" aria-label="Site navigation">
+    <a href="#" class="topnav-brand">📚 NCERT Books</a>
+
+    <div class="topnav-right">
+      <button id="bookmarkToggle" aria-label="Open bookmarks" title="Bookmarks"
+        style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:var(--radius-pill);color:var(--text-muted);cursor:pointer;padding:6px 13px;font-size:0.88rem;font-weight:700;">🔖
+        <span id="bmCount">0</span></button>
+    </div>
+  </nav>
+
+  <!-- Bookmarks Panel -->
+  <aside id="bookmarkPanel" aria-label="Saved books">
+    <div class="panel-header">
+      🔖 Saved Books
+      <button class="panel-close" id="panelClose" aria-label="Close panel">✕</button>
+    </div>
+    <div id="bookmarkList"></div>
+  </aside>
+
+  <main class="page" id="main">
+
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="hero-heading">
+
+      <h1 id="hero-heading">Download <span>NCERT</span><br>Textbooks Free</h1>
+      <p>All NCERT books for Classes 1–12 in one place. Browse by class or subject, search by title, and download ZIP or
+        preview PDF instantly.</p>
+      <div class="hero-stats">
+        <span class="stat-chip"><strong id="totalBooks">—</strong> Books</span>
+        <span class="stat-chip"><strong>12</strong> Classes</span>
+        <span class="stat-chip"><strong>Free</strong> Downloads</span>
+
+      </div>
+    </section>
+
+    <!-- Search & Filters -->
+    <div class="search-area" role="search" aria-label="Search and filter books">
+      <div class="search-row">
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input id="searchInput" type="search" placeholder="Search by title, subject…" autocomplete="off"
+            aria-label="Search books" />
+        </div>
+        <select id="classFilter" class="filter-select" aria-label="Filter by class">
+          <option value="all">All Classes</option>
+        </select>
+        <select id="subjectFilter" class="filter-select" aria-label="Filter by subject">
+          <option value="all">All Subjects</option>
+        </select>
+        <button id="clearBtn" class="hidden" aria-label="Clear filters">✕ Clear</button>
+      </div>
+
+      <!-- Quick Jump (Consolidated Navigation) -->
+      <nav class="quick-jump" id="quickJump" aria-label="Jump to class"></nav>
+    </div>
+
+    <!-- Status + View Toggle -->
+    <div class="status-bar">
+      <span id="resultCount">Loading books…</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="feedback" style="color:var(--text-muted);font-size:0.85rem;"></span>
+        <div class="view-toggle" role="group" aria-label="View mode">
+          <button class="view-btn active" id="gridViewBtn" title="Grid view" aria-pressed="true">⊞</button>
+          <button class="view-btn" id="listViewBtn" title="List view" aria-pressed="false">☰</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Grid (class-grouped) -->
+    <div id="bookContainer"></div>
+    <div id="errorMessage" class="error-box" style="display:none" role="alert"></div>
+
+  </main>
+
+  <!-- Back to Top -->
+  <button id="backToTop" aria-label="Back to top" title="Back to top">↑</button>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <footer>
+    <span>© 2026 NCERT Book Downloader. Not affiliated with NCERT officially. Books sourced from <a
+        href="https://ncert.nic.in" target="_blank" rel="noopener" style="color:var(--accent)">ncert.nic.in</a>.</span>
+    <span>Made for students 🎓</span>
+  </footer>
+
+</body>
+
+</html>
