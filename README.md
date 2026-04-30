@@ -5,7 +5,7 @@ A modern, fast, and user-friendly web application to browse and download NCERT t
 ![App Screenshot](image.png)
 
 ## 🌐 Live Demo
-Experience the app live here: **[NCERT PDF Downloader](https://mayankhassija.github.io/NCERT-PDF-DOWNLOADER/)**
+Experience the app live here: **[NCERT PDF Downloader](https://mayankhassija.github.io/ncert/)**
 
 ---
 
