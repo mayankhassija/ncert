@@ -2,7 +2,7 @@
 
 A modern, fast, and user-friendly web application to browse and download NCERT textbooks for Classes 1 to 12. 
 
-![App Screenshot](image.png)
+![App Screenshot](<img width="1341" height="583" alt="image" src="https://github.com/user-attachments/assets/28ad144b-712f-472d-b82f-4fbbee8f3184" />)
 
 ## 🌐 Live Demo
 Experience the app live here: **[NCERT PDF Downloader](https://mayankhassija.github.io/ncert/)**
