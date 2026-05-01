@@ -167,8 +167,48 @@ function applyFilters() {
     classHeading.innerHTML = `
           <h2 id="heading-class-${cls}">Class ${cls}</h2>
           <span class="class-count">${classBooksCount} book${classBooksCount !== 1 ? 's' : ''}</span>
+          <button class="class-bookmark-btn" data-class="${cls}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 4px 8px; margin-left: auto; transition: color var(--transition);" aria-label="Save all Class ${cls} books" title="Save/Remove all books in this class">☆</button>
         `;
     classSection.appendChild(classHeading);
+
+    // Add event listener for class bookmark button
+    const classBookmarkBtn = classHeading.querySelector('.class-bookmark-btn');
+    const booksInClass = Object.values(grouped[cls]).flat();
+    const allSaved = booksInClass.every(b => bookmarks.includes(b.book_code));
+    
+    if (allSaved) {
+      classBookmarkBtn.textContent = '★';
+      classBookmarkBtn.style.color = 'var(--accent)';
+    }
+    
+    classBookmarkBtn.addEventListener('click', () => {
+      const allBookCodesInClass = booksInClass.map(b => b.book_code);
+      const allCurrentlySaved = allBookCodesInClass.every(code => bookmarks.includes(code));
+      
+      if (allCurrentlySaved) {
+        // Remove all books in this class
+        allBookCodesInClass.forEach(code => {
+          const idx = bookmarks.indexOf(code);
+          if (idx !== -1) bookmarks.splice(idx, 1);
+        });
+        classBookmarkBtn.textContent = '☆';
+        classBookmarkBtn.style.color = 'var(--text-muted)';
+        showToast(`Removed all Class ${cls} books`);
+      } else {
+        // Add all books in this class
+        allBookCodesInClass.forEach(code => {
+          if (!bookmarks.includes(code)) bookmarks.push(code);
+        });
+        classBookmarkBtn.textContent = '★';
+        classBookmarkBtn.style.color = 'var(--accent)';
+        showToast(`Saved all Class ${cls} books`);
+      }
+      
+      localStorage.setItem('ncert_bookmarks', JSON.stringify(bookmarks));
+      updateBmCount();
+      renderBookmarkPanel();
+      applyFilters(); // re-render cards to update star state
+    });
 
     const subjectsContainer = document.createElement('div');
     subjectsContainer.className = 'subjects-container';
@@ -245,7 +285,12 @@ function updateBmCount() {
 function renderBookmarkPanel() {
   bookmarkList.innerHTML = '';
   if (!bookmarks.length) {
-    bookmarkList.innerHTML = '<div class="bookmark-empty">No saved books yet.<br>Click ☆ on any card to save.</div>';
+    bookmarkList.innerHTML = `
+      <div class="bookmark-empty">
+        <div class="bookmark-empty-icon">✨</div>
+        <div class="bookmark-empty-text">Your collection is empty</div>
+        <div class="bookmark-empty-hint">Click <span>☆</span> on any book card<br>to save it here.</div>
+      </div>`;
     return;
   }
   bookmarks.forEach(code => {
@@ -254,11 +299,20 @@ function renderBookmarkPanel() {
     const item = document.createElement('div');
     item.className = 'bookmark-item';
     item.innerHTML = `
-          <h3>${book.title}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+            <h3 style="margin: 0; flex: 1;">${book.title}</h3>
+            <button class="bookmark-remove-btn" data-code="${book.book_code}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 0; flex-shrink: 0;" aria-label="Remove ${book.title}" title="Remove from saved">★</button>
+          </div>
           <div class="actions">
             <a class="btn btn-primary" href="${BASE_URL}${book.book_code}dd.zip" target="_blank" rel="noopener" style="font-size:0.8rem;padding:8px 12px;">⬇ ZIP</a>
             <a class="btn btn-ghost" href="${BASE_URL}${book.book_code}ps.pdf" target="_blank" rel="noopener" style="font-size:0.8rem;padding:8px 12px;">👁 PDF</a>
           </div>`;
+    
+    // Add remove functionality
+    item.querySelector('.bookmark-remove-btn').addEventListener('click', () => {
+      toggleBookmark(book);
+    });
+    
     bookmarkList.appendChild(item);
   });
 }
@@ -306,6 +360,137 @@ bookmarkToggle.addEventListener('click', () => {
 panelClose.addEventListener('click', () => bookmarkPanel.classList.remove('open'));
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') bookmarkPanel.classList.remove('open');
+});
+
+// ── Download All Functionality ──
+const downloadModal = document.getElementById('downloadModal');
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+const downloadModalClose = document.getElementById('downloadModalClose');
+const downloadPauseBtn = document.getElementById('downloadPauseBtn');
+const downloadResumeBtn = document.getElementById('downloadResumeBtn');
+const downloadCancelBtn = document.getElementById('downloadCancelBtn');
+const downloadCloseBtn = document.getElementById('downloadCloseBtn');
+const downloadCurrentBook = document.getElementById('downloadCurrentBook');
+const downloadProgressFill = document.getElementById('downloadProgressFill');
+const downloadCount = document.getElementById('downloadCount');
+const downloadPercentage = document.getElementById('downloadPercentage');
+const downloadCompleted = document.getElementById('downloadCompleted');
+const downloadFailed = document.getElementById('downloadFailed');
+const downloadFailedList = document.getElementById('downloadFailedList');
+const failedBooksContainer = document.getElementById('failedBooksContainer');
+
+let downloadQueue = null;
+
+function initializeDownloadQueue() {
+  downloadQueue = new BookDownloadQueue({ delayMs: 10000 }); // 10 seconds between downloads
+
+  // Event: Start
+  downloadQueue.on('start', (data) => {
+    openDownloadModal();
+    downloadPauseBtn.style.display = 'block';
+    downloadResumeBtn.style.display = 'none';
+    downloadCancelBtn.style.display = 'block';
+    downloadCloseBtn.style.display = 'none';
+    showToast('📥 Starting download queue...');
+  });
+
+  // Event: Progress
+  downloadQueue.on('progress', (data) => {
+    downloadCurrentBook.textContent = `📖 ${data.currentBook.title}`;
+    downloadCount.textContent = `${data.current} / ${data.total}`;
+    downloadPercentage.textContent = `${Math.round((data.current / data.total) * 100)}%`;
+    downloadProgressFill.style.width = `${(data.current / data.total) * 100}%`;
+    downloadCompleted.textContent = data.completed;
+    downloadFailed.textContent = data.failed;
+  });
+
+  // Event: Complete
+  downloadQueue.on('complete', (data) => {
+    downloadPauseBtn.style.display = 'none';
+    downloadResumeBtn.style.display = 'none';
+    downloadCancelBtn.style.display = 'none';
+    downloadCloseBtn.style.display = 'block';
+    
+    let summary = `✅ Download complete! ${data.completed}/${data.total} books downloaded`;
+    if (data.failed > 0) {
+      summary += ` (${data.failed} failed)`;
+      downloadFailedList.style.display = 'block';
+    }
+    showToast(summary);
+  });
+
+  // Event: Pause
+  downloadQueue.on('pause', () => {
+    downloadPauseBtn.style.display = 'none';
+    downloadResumeBtn.style.display = 'block';
+    showToast('⏸ Download paused. Click Resume to continue.');
+  });
+
+  // Event: Cancel
+  downloadQueue.on('cancel', () => {
+    downloadModal.classList.remove('open');
+    showToast('✕ Download cancelled.');
+  });
+}
+
+function openDownloadModal() {
+  downloadModal.classList.add('open');
+  downloadModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeDownloadModal() {
+  downloadModal.classList.remove('open');
+  downloadModal.setAttribute('aria-hidden', 'true');
+}
+
+downloadAllBtn.addEventListener('click', () => {
+  if (bookmarks.length === 0) {
+    showToast('⚠️ No saved books. Add some bookmarks first!');
+    return;
+  }
+
+  if (!downloadQueue) initializeDownloadQueue();
+
+  // Check if there's a saved state and offer resume
+  const savedState = downloadQueue.getSavedState();
+  if (savedState && savedState.currentIndex > 0 && savedState.queueLength > 0) {
+    const confirmed = confirm(
+      `You have a previous download in progress (${savedState.currentIndex}/${savedState.queueLength} books).\n\nWould you like to resume?`
+    );
+    if (!confirmed) {
+      downloadQueue.cancel();
+    }
+  }
+
+  // Get only bookmarked books
+  const bookmarkedBooks = books.filter(b => bookmarks.includes(b.book_code));
+  downloadQueue.addBooks(bookmarkedBooks);
+  downloadQueue.start();
+});
+
+downloadModalClose.addEventListener('click', closeDownloadModal);
+
+downloadPauseBtn.addEventListener('click', () => {
+  downloadQueue.pause();
+});
+
+downloadResumeBtn.addEventListener('click', () => {
+  downloadQueue.resume();
+});
+
+downloadCancelBtn.addEventListener('click', () => {
+  if (confirm('Are you sure you want to cancel the download?')) {
+    downloadQueue.cancel();
+  }
+});
+
+downloadCloseBtn.addEventListener('click', closeDownloadModal);
+
+// Close modal on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && downloadModal.classList.contains('open')) {
+    closeDownloadModal();
+  }
 });
 
 

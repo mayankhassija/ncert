@@ -50,6 +50,7 @@
     rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
+  <script src="download-queue.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 
@@ -74,6 +75,9 @@
       <button class="panel-close" id="panelClose" aria-label="Close panel">✕</button>
     </div>
     <div id="bookmarkList"></div>
+    <div style="padding: 16px; border-top: 1px solid var(--border);">
+      <button id="downloadAllBtn" class="btn btn-accent" style="width: 100%;" title="Download all saved books sequentially">⬇ Download All Saved</button>
+    </div>
   </aside>
 
   <main class="page" id="main">
@@ -88,7 +92,6 @@
         <span class="stat-chip"><strong id="totalBooks">—</strong> Books</span>
         <span class="stat-chip"><strong>12</strong> Classes</span>
         <span class="stat-chip"><strong>Free</strong> Downloads</span>
-
       </div>
     </section>
 
@@ -136,6 +139,68 @@
 
   <!-- Toast -->
   <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Download Progress Modal -->
+  <div id="downloadModal" class="download-modal" role="dialog" aria-labelledby="downloadModalTitle" aria-hidden="true">
+    <div class="download-modal-content">
+      <div class="download-modal-header">
+        <h2 id="downloadModalTitle">📥 Download All Books</h2>
+        <button id="downloadModalClose" class="modal-close" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="download-modal-body">
+        <!-- Progress Bar -->
+        <div class="progress-section">
+          <div class="progress-stat">
+            <span id="downloadCurrentBook">Preparing...</span>
+          </div>
+          <div class="progress-bar">
+            <div id="downloadProgressFill" class="progress-bar-fill"></div>
+          </div>
+          <div class="progress-info">
+            <span id="downloadCount">0 / 0</span>
+            <span id="downloadPercentage">0%</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="download-stats">
+          <div class="stat-item">
+            <span class="stat-label">Completed:</span>
+            <span id="downloadCompleted" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Failed:</span>
+            <span id="downloadFailed" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Delay:</span>
+            <span class="stat-value">10s/book</span>
+          </div>
+        </div>
+
+        <!-- Info Message -->
+        <div class="download-info">
+          <p style="font-size: 0.82rem; color: var(--text-muted);">
+            💡 Keep this browser tab open. Downloads start in your default folder. You can pause and resume anytime.
+          </p>
+        </div>
+
+        <!-- Failed Books List -->
+        <div id="downloadFailedList" class="download-failed-list" style="display: none;">
+          <h3 style="margin-bottom: 10px; font-size: 0.95rem;">Failed Downloads:</h3>
+          <div id="failedBooksContainer" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem; color: var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <div class="download-modal-footer">
+        <button id="downloadPauseBtn" class="btn btn-secondary">⏸ Pause</button>
+        <button id="downloadResumeBtn" class="btn btn-secondary" style="display: none;">▶ Resume</button>
+        <button id="downloadCancelBtn" class="btn btn-danger">✕ Cancel</button>
+        <button id="downloadCloseBtn" class="btn btn-primary" style="display: none;">✓ Done</button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <span>© 2026 NCERT Book Downloader. Not affiliated with NCERT officially. Books sourced from <a
